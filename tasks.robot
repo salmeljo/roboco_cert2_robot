@@ -16,15 +16,14 @@ Library    RPA.Robocloud.Secrets
 #Library    variables/variables.py
 
 *** Variables ***
-#${ORDER_CSV_URL}    https://robotsparebinindustries.com/orders.csv
-#${ORDER_PAGE}       https://robotsparebinindustries.com/#/robot-order
 ${ORDER_FILE}       orders.csv
 &{RADIO_BODY}    1=Roll-a-thor body    2=Peanut crusher body   3=D.A.V.E body    4=Andy Roid body    5=Spanner mate body    6=Drillbit 2000 body     
 
 *** Keywords ***
 Get robot order secret website
     ${secret}=    Get Secret    robotorderpage
-    [Return]    ${secret}
+    Log To Console    ${secret}[url]
+    [Return]    ${secret}[url]
 
 *** Keywords ***
 Ask order CSV url from user
@@ -69,13 +68,11 @@ Order another
 *** Keywords ***
 Store the receipt as a PDF file
     ${receipt}=    Get Property    css=#receipt    outerHTML
-    #Html To Pdf    ${receipt}    ${OUTPUT_DIR}${/}receipts${/}robot_order_receipt_id${order_number}.pdf
     Html To Pdf    ${receipt}    ${OUTPUT_DIR}${/}temp_robot_order_receipt.pdf
 
 Take robot screenshot
     Wait For Elements State    id=robot-preview-image    timeout=4
     Sleep    1.5s
-    #Take Screenshot    ${OUTPUT_DIR}${/}receipts${/}robot_figure_id${order_number}    id=robot-preview
     Take Screenshot    ${OUTPUT_DIR}${/}temp_robot_order_figure    id=robot-preview
 
 Embed screenshot to PDF receipt
@@ -83,7 +80,9 @@ Embed screenshot to PDF receipt
     ${current_robot_files}=    Create List
     ...    ${OUTPUT_DIR}${/}temp_robot_order_receipt.pdf    
     ...    ${OUTPUT_DIR}${/}temp_robot_order_figure.png
+    Log To Console    embed screenshot ${order_number}
     Add Files To Pdf    ${current_robot_files}    ${OUTPUT_DIR}${/}receipts${/}robot_order_receipt_id${order_number}.pdf
+    Log To Console    temp pdf add    
 
 *** Keywords ***
 Fill form
@@ -98,18 +97,16 @@ Fill form
  
 *** Keywords ***
 Order robots
-    ${orders}=    Get orders
+    [Arguments]    ${orders}   
     FOR    ${order}    IN    @{orders}
         Close modal
         Fill form    ${order}
         Preview robot
-        #Log To Console    hurry!
         Wait Until Keyword Succeeds    5x    1 sec    Submit order    ${order}[Order number]
         Store the receipt as a PDF file
         Take robot screenshot
         Embed screenshot to PDF receipt    ${order}[Order number]    
         Click    button#order-another
-        #Log To Console    UP!
     END
 
 *** Keywords ***
@@ -121,9 +118,9 @@ Create ZIP package from PDF files
 
 *** Tasks ***
 Order robots from RobotSpareBin Industries Inc
-    ${order_csv_url}=    Ask order CSV url from user
     ${order_website}=    Get robot order secret website
     Open the robot order website    ${order_website}
-    #Get orders
-    #Order robots
-    #Create ZIP package from PDF files
+    ${order_csv_url}=    Ask order CSV url from user
+    ${orders}=    Get orders    ${order_csv_url}
+    Order robots     ${orders}
+    Create ZIP package from PDF files
