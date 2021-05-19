@@ -72,7 +72,7 @@ Store the receipt as a PDF file
 
 Take robot screenshot
     Wait For Elements State    id=robot-preview-image    timeout=4
-    Sleep    1.5s
+    Sleep    2s
     Take Screenshot    ${OUTPUT_DIR}${/}temp_robot_order_figure    id=robot-preview
 
 Embed screenshot to PDF receipt
@@ -80,15 +80,12 @@ Embed screenshot to PDF receipt
     ${current_robot_files}=    Create List
     ...    ${OUTPUT_DIR}${/}temp_robot_order_receipt.pdf    
     ...    ${OUTPUT_DIR}${/}temp_robot_order_figure.png
-    Log To Console    embed screenshot ${order_number}
-    Add Files To Pdf    ${current_robot_files}    ${OUTPUT_DIR}${/}receipts${/}robot_order_receipt_id${order_number}.pdf
-    Log To Console    temp pdf add    
+    Add Files To Pdf    ${current_robot_files}    ${OUTPUT_DIR}${/}robot_order_receipt_id${order_number}.pdf
 
 *** Keywords ***
 Fill form
     [Arguments]    ${row}
     Browser.Select Options By    select#head    value    ${row}[Head]
-    #Log To Console    ${RADIO_BODY}[${row}[Body]]    
     ${click_this}=    Convert To String    ${RADIO_BODY}[${row}[Body]]
     Click    text=${click_this}
     Fill Text    css=div.form-group > input[type="number"]    ${row}[Legs]
@@ -113,8 +110,9 @@ Order robots
 Create ZIP package from PDF files
     ${zip_file_name}=    Set Variable    ${OUTPUT_DIR}/robot_receipt_PDFs.zip
     Archive Folder With Zip
-    ...    ${OUTPUT_DIR}${/}receipts
-    ...    ${zip_file_name}    
+    ...    ${OUTPUT_DIR}
+    ...    ${zip_file_name}
+    ...    include=robot_*.pdf    
 
 *** Tasks ***
 Order robots from RobotSpareBin Industries Inc
